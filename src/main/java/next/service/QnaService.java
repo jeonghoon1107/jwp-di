@@ -3,27 +3,34 @@ package next.service;
 import core.annotation.Inject;
 import core.annotation.Service;
 import next.CannotDeleteException;
+import next.dto.AnswerCreatedDto;
+import next.dto.QuestionCreatedDto;
+import next.dto.QuestionUpdatedDto;
 import next.model.Answer;
 import next.model.Question;
 import next.model.User;
 import next.repository.JdbcAnswerRepository;
 import next.repository.JdbcQuestionRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 @Service
 public class QnaService {
 
+    private static final Logger log = LoggerFactory.getLogger(QnaService.class);
+
     private final JdbcAnswerRepository jdbcAnswerRepository;
     private final JdbcQuestionRepository jdbcQuestionRepository;
 
     @Inject
-    public QnaService(JdbcAnswerRepository jdbcAnswerRepository) {
+    public QnaService(JdbcAnswerRepository jdbcAnswerRepository, JdbcQuestionRepository jdbcQuestionRepository) {
         this.jdbcAnswerRepository = jdbcAnswerRepository;
-        jdbcQuestionRepository = new JdbcQuestionRepository();
+        this.jdbcQuestionRepository = jdbcQuestionRepository;
     }
 
-    public Question findById(long questionId) {
+    public Question findQuestionById(long questionId) {
         return jdbcQuestionRepository.findById(questionId);
     }
 
@@ -61,5 +68,34 @@ public class QnaService {
         }
 
         jdbcQuestionRepository.delete(questionId);
+    }
+
+    public List<Question> findAllQuestions() {
+        return jdbcQuestionRepository.findAll();
+    }
+
+    public void saveQuestion(User user, QuestionCreatedDto questionCreatedDto) {
+        Question question = new Question(user.getUserId(), questionCreatedDto.getTitle(), questionCreatedDto.getContents());
+        jdbcQuestionRepository.insert(question);
+    }
+
+    public void updateQuestion(Question question, QuestionUpdatedDto questionUpdatedDto) {
+        Question newQuestion = new Question(question.getWriter(), questionUpdatedDto.getTitle(), questionUpdatedDto.getContents());
+        question.update(newQuestion);
+        jdbcQuestionRepository.update(question);
+    }
+
+    public void deleteAnswer(Long answerId) {
+        jdbcAnswerRepository.delete(answerId);
+    }
+
+    public Answer saveAnswer(String userId, AnswerCreatedDto answerCreatedDto) {
+        Answer answer = new Answer(userId, answerCreatedDto.getContents(), answerCreatedDto.getQuestionId());
+        log.debug("answer : {}", answer);
+
+        Answer savedAnswer = jdbcAnswerRepository.insert(answer);
+        jdbcQuestionRepository.updateCountOfAnswer(savedAnswer.getQuestionId());
+
+        return savedAnswer;
     }
 }

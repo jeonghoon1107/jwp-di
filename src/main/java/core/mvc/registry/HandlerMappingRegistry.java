@@ -1,4 +1,6 @@
-package core.mvc;
+package core.mvc.registry;
+
+import core.mvc.HandlerMapping;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;

@@ -4,25 +4,23 @@ import core.annotation.Inject;
 import core.annotation.web.Controller;
 import core.annotation.web.RequestMapping;
 import core.annotation.web.RequestMethod;
-import core.mvc.ModelAndView;
 import core.mvc.tobe.AbstractNewController;
-import next.repository.JdbcQuestionRepository;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import core.mvc.view.ModelAndView;
+import next.service.QnaService;
 
 @Controller
+@RequestMapping(value = "/")
 public class HomeController extends AbstractNewController {
 
-    private final JdbcQuestionRepository jdbcQuestionRepository;
+    private final QnaService qnaService;
 
     @Inject
-    public HomeController(JdbcQuestionRepository jdbcQuestionRepository) {
-        this.jdbcQuestionRepository = new JdbcQuestionRepository();
+    public HomeController(QnaService qnaService) {
+        this.qnaService = qnaService;
     }
 
-    @RequestMapping(value = "/", method = RequestMethod.GET)
-    public ModelAndView execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        return jspView("home.jsp").addObject("questions", jdbcQuestionRepository.findAll());
+    @RequestMapping(method = RequestMethod.GET)
+    public ModelAndView execute() throws Exception {
+        return jspView("home").addObject("questions", qnaService.findAllQuestions());
     }
 }

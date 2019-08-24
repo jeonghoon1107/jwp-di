@@ -31,4 +31,10 @@ public class ParameterNameDiscovererTest {
 
         }
     }
+
+    @Test
+    void name() {
+        String path = "/api/users";
+        String target = "/api/{id}}";
+    }
 }

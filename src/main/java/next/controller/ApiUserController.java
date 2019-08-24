@@ -1,73 +1,57 @@
 package next.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import core.annotation.Inject;
-import core.annotation.web.Controller;
-import core.annotation.web.RequestMapping;
-import core.annotation.web.RequestMethod;
-import core.mvc.JsonView;
-import core.mvc.ModelAndView;
+import core.annotation.web.*;
+import core.mvc.view.JsonView;
+import core.mvc.view.ModelAndView;
 import next.dto.UserCreatedDto;
 import next.dto.UserUpdatedDto;
-import next.model.User;
-import next.repository.JdbcUserRepository;
+import next.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 @Controller
+@RequestMapping(value = "/api/users")
 public class ApiUserController {
-    private static final Logger logger = LoggerFactory.getLogger(ApiUserController.class);
+    private static final Logger log = LoggerFactory.getLogger(ApiUserController.class);
 
-    private ObjectMapper objectMapper = new ObjectMapper();
-
-    private final JdbcUserRepository jdbcUserRepository;
+    private final UserService userService;
 
     @Inject
-    public ApiUserController(JdbcUserRepository jdbcUserRepository) {
-        this.jdbcUserRepository = jdbcUserRepository;
+    public ApiUserController(UserService userService) {
+        this.userService = userService;
     }
 
-    @RequestMapping(value = "/api/users", method = RequestMethod.POST)
-    public ModelAndView create(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        UserCreatedDto createdDto = objectMapper.readValue(request.getInputStream(), UserCreatedDto.class);
-        logger.debug("Created User : {}", createdDto);
+    @RequestMapping(method = RequestMethod.POST)
+    public ModelAndView create(@RequestBody UserCreatedDto createdDto, HttpServletResponse response) throws Exception {
+        log.debug("Created User : {}", createdDto);
 
-        jdbcUserRepository.insert(new User(
-                createdDto.getUserId(),
-                createdDto.getPassword(),
-                createdDto.getName(),
-                createdDto.getEmail()));
+        userService.save(createdDto);
 
-        response.setHeader("Location", "/api/users?userId=" + createdDto.getUserId());
+        response.setHeader("Location", "/api/users/" + createdDto.getUserId());
         response.setStatus(HttpStatus.CREATED.value());
 
         return new ModelAndView(new JsonView());
     }
 
-    @RequestMapping(value = "/api/users", method = RequestMethod.GET)
-    public ModelAndView show(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        String userId = request.getParameter("userId");
-        logger.debug("userId : {}", userId);
+    @RequestMapping(value = "/{userId}", method = RequestMethod.GET)
+    public ModelAndView show(@PathVariable String userId) throws Exception {
+        log.debug("userId : {}", userId);
 
         ModelAndView mav = new ModelAndView(new JsonView());
-        mav.addObject("user", jdbcUserRepository.findById(userId));
+        mav.addObject("user", userService.findById(userId));
         return mav;
     }
 
-    @RequestMapping(value = "/api/users", method = RequestMethod.PUT)
-    public ModelAndView update(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        String userId = request.getParameter("userId");
-        logger.debug("userId : {}", userId);
-        UserUpdatedDto updateDto = objectMapper.readValue(request.getInputStream(), UserUpdatedDto.class);
-        logger.debug("Updated User : {}", updateDto);
+    @RequestMapping(value = "/{userId}", method = RequestMethod.PUT)
+    public ModelAndView update(@PathVariable String userId, @RequestBody UserUpdatedDto updateDto) throws Exception {
+        log.debug("userId : {}", userId);
+        log.debug("Updated User : {}", updateDto);
 
-        User user = jdbcUserRepository.findById(userId);
-        user.update(updateDto);
-        jdbcUserRepository.update(user);
+        userService.update(userId, updateDto);
 
         return new ModelAndView(new JsonView());
     }

@@ -5,61 +5,54 @@ import core.annotation.web.Controller;
 import core.annotation.web.RequestMapping;
 import core.annotation.web.RequestMethod;
 import core.jdbc.DataAccessException;
-import core.mvc.ModelAndView;
 import core.mvc.tobe.AbstractNewController;
+import core.mvc.view.ModelAndView;
+import next.dto.AnswerCreatedDto;
 import next.model.Answer;
 import next.model.Result;
 import next.model.User;
-import next.repository.JdbcAnswerRepository;
-import next.repository.JdbcQuestionRepository;
+import next.service.QnaService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 @Controller
+@RequestMapping(value = "/api/qna")
 public class ApiQnaController extends AbstractNewController {
-    private static final Logger logger = LoggerFactory.getLogger(ApiQnaController.class);
+    private static final Logger log = LoggerFactory.getLogger(ApiQnaController.class);
 
-    private final JdbcQuestionRepository jdbcQuestionRepository;
-    private final JdbcAnswerRepository jdbcAnswerRepository;
+    private final QnaService qnaService;
 
     @Inject
-    public ApiQnaController(JdbcQuestionRepository jdbcQuestionRepository, JdbcAnswerRepository jdbcAnswerRepository) {
-        this.jdbcAnswerRepository = jdbcAnswerRepository;
-        this.jdbcQuestionRepository = new JdbcQuestionRepository();
+    public ApiQnaController(QnaService qnaService) {
+        this.qnaService = qnaService;
     }
 
-    @RequestMapping(value = "/api/qna/list", method = RequestMethod.GET)
-    public ModelAndView questions(HttpServletRequest req, HttpServletResponse resp) throws Exception {
-        return jsonView().addObject("questions", jdbcQuestionRepository.findAll());
+    @RequestMapping(value = "/list", method = RequestMethod.GET)
+    public ModelAndView questions() throws Exception {
+        return jsonView().addObject("questions", qnaService.findAllQuestions());
     }
 
-    @RequestMapping(value = "/api/qna/addAnswer", method = RequestMethod.POST)
-    public ModelAndView addAnswer(HttpServletRequest req, HttpServletResponse response) throws Exception {
-        if (!UserSessionUtils.isLogined(req.getSession())) {
+    @RequestMapping(value = "/addAnswer", method = RequestMethod.POST)
+    public ModelAndView addAnswer(AnswerCreatedDto answerCreatedDto, HttpSession session) throws Exception {
+        if (!UserSessionUtils.isLogined(session)) {
             return jsonView().addObject("result", Result.fail("Login is required"));
         }
 
-        User user = UserSessionUtils.getUserFromSession(req.getSession());
-        Answer answer = new Answer(user.getUserId(), req.getParameter("contents"),
-                Long.parseLong(req.getParameter("questionId")));
-        logger.debug("answer : {}", answer);
+        User user = UserSessionUtils.getUserFromSession(session);
 
-        Answer savedAnswer = jdbcAnswerRepository.insert(answer);
-        jdbcQuestionRepository.updateCountOfAnswer(savedAnswer.getQuestionId());
+        Answer savedAnswer = qnaService.saveAnswer(user.getUserId(), answerCreatedDto);
 
         return jsonView().addObject("answer", savedAnswer).addObject("result", Result.ok());
     }
 
-    @RequestMapping(value = "/api/qna/deleteAnswer", method = RequestMethod.POST)
-    public ModelAndView deleteAnswer(HttpServletRequest req, HttpServletResponse resp) throws Exception {
-        Long answerId = Long.parseLong(req.getParameter("answerId"));
+    @RequestMapping(value = "/deleteAnswer", method = RequestMethod.POST)
+    public ModelAndView deleteAnswer(Long answerId) throws Exception {
 
         ModelAndView mav = jsonView();
         try {
-            jdbcAnswerRepository.delete(answerId);
+            qnaService.deleteAnswer(answerId);
             mav.addObject("result", Result.ok());
         } catch (DataAccessException e) {
             mav.addObject("result", Result.fail(e.getMessage()));

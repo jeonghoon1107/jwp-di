@@ -10,13 +10,13 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class AnnotationHandlerMappingTest {
-    private AnnotationHandlerMapping handlerMapping;
+public class RequestMappingHandlerMappingTest {
+    private RequestMappingHandlerMapping handlerMapping;
 
     @BeforeEach
     public void setup() {
         WebApplicationContext webApplicationContext = new WebApplicationContext("core.mvc.tobe");
-        handlerMapping = new AnnotationHandlerMapping(webApplicationContext);
+        handlerMapping = new RequestMappingHandlerMapping(webApplicationContext);
         handlerMapping.initialize();
     }
 

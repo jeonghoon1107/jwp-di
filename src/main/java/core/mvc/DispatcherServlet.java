@@ -2,8 +2,12 @@ package core.mvc;
 
 import core.mvc.asis.ControllerHandlerAdapter;
 import core.mvc.asis.RequestMapping;
-import core.mvc.tobe.AnnotationHandlerMapping;
+import core.mvc.registry.HandlerAdapterRegistry;
+import core.mvc.registry.HandlerMappingRegistry;
+import core.mvc.tobe.RequestMappingHandlerMapping;
 import core.mvc.tobe.HandlerExecutionHandlerAdapter;
+import core.mvc.view.ModelAndView;
+import core.mvc.view.View;
 import core.web.context.WebApplicationContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +40,7 @@ public class DispatcherServlet extends HttpServlet {
     public void init() {
         handlerMappingRegistry = new HandlerMappingRegistry();
         handlerMappingRegistry.addHandlerMpping(new RequestMapping());
-        handlerMappingRegistry.addHandlerMpping(new AnnotationHandlerMapping(webApplicationContext));
+        handlerMappingRegistry.addHandlerMpping(new RequestMappingHandlerMapping(webApplicationContext));
 
         handlerAdapterRegistry = new HandlerAdapterRegistry();
         handlerAdapterRegistry.addHandlerAdapter(new HandlerExecutionHandlerAdapter());

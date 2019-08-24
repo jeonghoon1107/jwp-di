@@ -1,4 +1,4 @@
-package core.mvc;
+package core.mvc.view;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.MediaType;

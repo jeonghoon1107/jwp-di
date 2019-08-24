@@ -1,4 +1,4 @@
-package core.mvc;
+package core.mvc.view;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +11,7 @@ import java.util.Set;
 
 public class JspView implements View {
     private static final Logger logger = LoggerFactory.getLogger(JspView.class);
-    public static final String DEFAULT_REDIRECT_PREFIX = "redirect:";
+    private static final String SUFFIX = ".jsp";
 
     private String viewName;
 
@@ -23,13 +23,8 @@ public class JspView implements View {
     }
 
     @Override
-    public void render(Map<String, ?> model, HttpServletRequest request, HttpServletResponse response)
-            throws Exception {
+    public void render(Map<String, ?> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
         logger.debug("ViewName : {}", viewName);
-        if (viewName.startsWith(DEFAULT_REDIRECT_PREFIX)) {
-            response.sendRedirect(viewName.substring(DEFAULT_REDIRECT_PREFIX.length()));
-            return;
-        }
 
         Set<String> keys = model.keySet();
         for (String key : keys) {
@@ -37,7 +32,7 @@ public class JspView implements View {
             request.setAttribute(key, model.get(key));
         }
 
-        RequestDispatcher rd = request.getRequestDispatcher(viewName);
+        RequestDispatcher rd = request.getRequestDispatcher(viewName + SUFFIX);
         rd.forward(request, response);
     }
 }

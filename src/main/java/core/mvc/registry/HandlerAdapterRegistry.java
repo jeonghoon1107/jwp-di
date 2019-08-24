@@ -1,4 +1,6 @@
-package core.mvc;
+package core.mvc.registry;
+
+import core.mvc.HandlerAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
